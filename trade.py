@@ -8,7 +8,15 @@ import easyquotation
 import urllib
 import pickle
 import json
+import schedule
+from datetime import datetime
 
+#full值每天要手动修改
+TONG_XIN=['512800','200',False]
+TONG_XIN_FULL=False
+ZHENG_QUAN=['512800','300',False]
+ZHENG_QUAN_FULL=False
+DO_LIST=[TONG_XIN,ZHENG_QUAN]
 
 
 def start():
@@ -89,10 +97,6 @@ class Trader:
         send_keys(amount)
         send_keys('{ENTER 2}')
        
-   
-
-
-
     @staticmethod
     def sale(code,amount):
           #读取交易界面句柄，获得窗口
@@ -125,29 +129,74 @@ class Trader:
         win.set_focus()
         #清空代码框
         send_keys('{BS 6}')
-      
+        log("refresh")
+    @staticmethod
+    def refresh1():
+        log("refresh")
 #开始计算并进行交易    
-def job(full,code):
-    ema5=getEma5()
-    nowPrice=getLast()
-    if nowPrice>=ema5 :
-        if full:
-            return
+def job():
+    print()
+    print(DO_LIST)
+    for item in DO_LIST:
+        code=item[0]
+        amount=item[1]
+        full=item[2]
+        nowPrice=datetime.now().time().hour
+        ema5=datetime.now().time().minute
+        #ema5=getEma5()
+        #nowPrice=getLast()
+        if nowPrice>=ema5:
+            if full:
+                log("doNothing")
+                return
+            else:
+                #Trader.buy(code,amount)
+                log("buy")
+                item[2]=True
         else:
-         Trader.sale()
-    else:
-        if full:
-            Trader.sale
-        else:
-            return
+            if full:
+                #Trader.sale(code,amount)
+                log("sale")
+                item[2]=False
+            else:
+                log("---doNothing")
+                return
+    
 
-
-
+def log(message):
+    print(str(datetime.now().time())+message+"---")
 
 
 if __name__ == '__main__':
-   ans= getNow('512800')
-   print(ans)
+    #添加定时刷新业务
+    minRange=[':59',':14',':29',':44']
+    for min in minRange:
+         schedule.every().hour.at(min).do(Trader.refresh1)
+    #添加定时交易业务
+    schedule.every().day.at("09:44:40").do(job)
+    schedule.every().day.at("09:59:40").do(job)
+    schedule.every().day.at("10:14:40").do(job)
+    schedule.every().day.at("10:29:40").do(job)
+    schedule.every().day.at("10:44:40").do(job)
+    schedule.every().day.at("10:59:40").do(job)
+    schedule.every().day.at("11:14:40").do(job)
+    schedule.every().day.at("11:29:40").do(job)
+    schedule.every().day.at("13:14:40").do(job)
+    schedule.every().day.at("13:29:40").do(job)
+    schedule.every().day.at("13:44:40").do(job)
+    schedule.every().day.at("13:59:40").do(job)
+    schedule.every().day.at("14:14:40").do(job)
+    schedule.every().day.at("14:29:40").do(job)
+    schedule.every().day.at("14:44:40").do(job)
+    schedule.every().day.at("14:56:40").do(job)
+    
+    log("start_the_process")
+    while True :
+        schedule.run_pending()
+        
+
+  
+ 
    
 
 
