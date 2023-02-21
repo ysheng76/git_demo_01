@@ -11,6 +11,11 @@ import json
 import schedule
 from datetime import datetime
 
+
+###操作规范:
+###设置好DO_LIST里的内容->
+###->运行self_test->手动撤单->并观察程序是否正在运行(鼠标有选中,控制台是否在打印)
+
 #full值每天要手动修改
 TONG_XIN=['512800','200',False]
 TONG_XIN_FULL=False
@@ -53,7 +58,9 @@ def getEma5(market,code):
    for item in allData:
         sum+=float(item['close'])
    ave=sum/5.0
+   log("ema5:"+str(ave))
    return ave
+
 
 def getLast(market,code):
     #注意etf是sz还是sh
@@ -65,6 +72,7 @@ def getLast(market,code):
    allData=json.loads(allDataJson)
    print(allData)
    for item in allData:
+       log("nowprice:"+item['close'])
        return float(item['close'])
 
 
@@ -74,6 +82,7 @@ def getNow(code):
     quotation=easyquotation.use('sina')
     data=quotation.real(code)
     ans=data[code]['now']
+    log("nowprice:"+ans)
     return ans
 
 
@@ -159,12 +168,20 @@ def job():
                 log("sale")
                 item[2]=False
             else:
-                log("---doNothing")
+                log("doNothing")
                 return
     
 
 def log(message):
-    print(str(datetime.now().time())+message+"---")
+    print(str(datetime.now().time())+"---"+message)
+def self_test():
+    log("start_test")
+    print(DO_LIST)
+    Trader.refresh()
+    Trader.buy("512800","100")
+    Trader.refresh()
+    Trader.sale("512800","100")
+    log("end_test")
 
 
 if __name__ == '__main__':
@@ -189,8 +206,9 @@ if __name__ == '__main__':
     schedule.every().day.at("14:29:40").do(job)
     schedule.every().day.at("14:44:40").do(job)
     schedule.every().day.at("14:56:40").do(job)
-    
+
     log("start_the_process")
+    self_test()
     while True :
         schedule.run_pending()
         
