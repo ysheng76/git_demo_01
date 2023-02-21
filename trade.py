@@ -17,11 +17,11 @@ from datetime import datetime
 ###->运行self_test->手动撤单->并观察程序是否正在运行(鼠标有选中,控制台是否在打印)
 
 #full值每天要手动修改
-TONG_XIN=['512800','200',False]
+TONG_XIN=['515800','100',False]
 TONG_XIN_FULL=False
 ZHENG_QUAN=['512800','300',False]
 ZHENG_QUAN_FULL=False
-DO_LIST=[TONG_XIN,ZHENG_QUAN]
+DO_LIST=[TONG_XIN]
 
 
 def start():
@@ -95,7 +95,7 @@ class Trader:
         #读取交易界面句柄，获得窗口
         hwnd = win32gui.FindWindow(None, "网上股票交易系统5.0")
         app = Application().connect(handle=hwnd)
-        win = app.win = app.top_window()
+        win = app.top_window()
         win.set_focus()
         #确定切换到买入界面
         send_keys('{F1}')
@@ -105,13 +105,16 @@ class Trader:
         send_keys('{ENTER 2}')
         send_keys(amount)
         send_keys('{ENTER 2}')
+        log("buy")
+ 
        
     @staticmethod
     def sale(code,amount):
           #读取交易界面句柄，获得窗口
+        log("start_sale")
         hwnd = win32gui.FindWindow(None, "网上股票交易系统5.0")
         app = Application().connect(handle=hwnd)
-        win = app.win = app.top_window()
+        win =app.top_window()
         win.set_focus()
         #确定切换到买入界面
         send_keys('{F2}')
@@ -121,8 +124,11 @@ class Trader:
         send_keys('{ENTER 2}')
         send_keys(amount)
         send_keys('{ENTER 2}')
+    
+
     @staticmethod
     def refresh():
+        log("refresh")
         #读取交易界面句柄，获得窗口
         hwnd = win32gui.FindWindow(None, "网上股票交易系统5.0")
         app = Application().connect(handle=hwnd)
@@ -138,7 +144,9 @@ class Trader:
         win.set_focus()
         #清空代码框
         send_keys('{BS 6}')
+       
         log("refresh")
+        win.set_focus()
     @staticmethod
     def refresh1():
         log("refresh")
@@ -176,11 +184,13 @@ def log(message):
     print(str(datetime.now().time())+"---"+message)
 def self_test():
     log("start_test")
-    print(DO_LIST)
+   
     Trader.refresh()
-    Trader.buy("512800","100")
+    Trader.buy("515880","100")
+    sleep(5)
     Trader.refresh()
-    Trader.sale("512800","100")
+    sleep(5)
+    Trader.sale("515880","100")
     log("end_test")
 
 
@@ -208,6 +218,8 @@ if __name__ == '__main__':
     schedule.every().day.at("14:56:40").do(job)
 
     log("start_the_process")
+    #Trader.refresh()
+    #Trader.refresh()
     self_test()
     while True :
         schedule.run_pending()
