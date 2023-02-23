@@ -13,36 +13,15 @@ from datetime import datetime
 
 
 ###操作规范:
-###设置好DO_LIST里的内容->
-###->运行self_test->手动撤单->并观察程序是否正在运行(鼠标有选中,控制台是否在打印)
+###设置好DO_LIST里的内容(3个)->手动撤单->调好设置(主要设置)->并观察程序是否正在运行(鼠标有选中,控制台是否在打印)
 
 #full值每天要手动修改
-TONG_XIN=['515800','100',False]
+TONG_XIN=['515880','100',False]
 TONG_XIN_FULL=False
-ZHENG_QUAN=['512800','300',False]
-ZHENG_QUAN_FULL=False
 DO_LIST=[TONG_XIN]
 
 
-def start():
-    try:
-        hwnd = win32gui.FindWindow(None, "网上股票交易系统5.0")
-        app = Application().connect(handle=hwnd)
-        win = app.win = app.top_window()
-        win.set_focus()
-        send_keys('600512')
-        send_keys('{ENTER}')
-        send_keys('{ENTER}')
-        send_keys('300')
-        send_keys('{ENTER}')
-        send_keys('{ENTER}')
-        hwnd1 = 791354
-        print(hwnd)
-        print(hwnd1)
-        win32api.SendMessage(hwnd, win32con.WM_SETTEXT, None, '519120')
-        print("hello")
-    except Exception as e:
-         print(e)
+
 
 #获取5日均线报价
 def getEma5(market,code):
@@ -92,20 +71,29 @@ def getNow(code):
 class Trader:
     @staticmethod
     def buy(code,amount):
+        log("start___buy:")    
+        log("code=="+code)
+        log("amount=="+amount)
         #读取交易界面句柄，获得窗口
         hwnd = win32gui.FindWindow(None, "网上股票交易系统5.0")
         app = Application().connect(handle=hwnd)
         win = app.top_window()
+     
         win.set_focus()
         #确定切换到买入界面
+        send_keys('{F2}')
         send_keys('{F1}')
         win.set_focus()
+    
         #进行买入操作
         send_keys(code)
-        send_keys('{ENTER 2}')
+        send_keys('{ENTER}')
+        sleep(0.3)
+        send_keys('{ENTER}')
         send_keys(amount)
         send_keys('{ENTER 2}')
-        log("buy")
+        log("end_buy")
+ 
  
        
     @staticmethod
@@ -121,7 +109,9 @@ class Trader:
         win.set_focus()
         #进行买入操作
         send_keys(code)
-        send_keys('{ENTER 2}')
+        send_keys('{ENTER}')
+        sleep(0.3)
+        send_keys('{ENTER}')
         send_keys(amount)
         send_keys('{ENTER 2}')
     
@@ -129,10 +119,13 @@ class Trader:
     @staticmethod
     def refresh():
         log("refresh")
-        #读取交易界面句柄，获得窗口
         hwnd = win32gui.FindWindow(None, "网上股票交易系统5.0")
         app = Application().connect(handle=hwnd)
-        win = app.win = app.top_window()
+        win =app.top_window()
+  
+        win.set_focus()
+        send_keys('{F2}')
+        send_keys('{F1}')
         #获取刷新界面句柄
         refreshPage1 = win32gui.FindWindowEx(hwnd,None,'ToolbarWindow32',None)
         refreshPage2= win32gui.FindWindowEx(refreshPage1,None,'#32770',None)
@@ -142,63 +135,65 @@ class Trader:
         win32api.SendMessage(refreshPage2,win32con.WM_LBUTTONUP,win32con.MK_LBUTTON,position)
         #鼠标定位到代码输入框
         win.set_focus()
-        #清空代码框
-        send_keys('{BS 6}')
+        send_keys('{F2}')
+        send_keys('{F1}')
        
-        log("refresh")
-        win.set_focus()
-    @staticmethod
-    def refresh1():
-        log("refresh")
+    
+        #清空代码框
+
+
 #开始计算并进行交易    
 def job():
-    print()
-    print(DO_LIST)
+    log("do___the___job")
     for item in DO_LIST:
         code=item[0]
         amount=item[1]
         full=item[2]
-        nowPrice=datetime.now().time().hour
-        ema5=datetime.now().time().minute
-        #ema5=getEma5()
-        #nowPrice=getLast()
+        ema5=getEma5("sh",code)
+        nowPrice=getLast("sh",code)
         if nowPrice>=ema5:
             if full:
-                log("doNothing")
+                log("buy--doNothing")
                 return
             else:
-                #Trader.buy(code,amount)
-                log("buy")
+                Trader.buy(code,amount)
                 item[2]=True
         else:
             if full:
-                #Trader.sale(code,amount)
-                log("sale")
+                Trader.sale(code,amount)
                 item[2]=False
             else:
-                log("doNothing")
+                log("sale---doNothing")
                 return
+
+
+def self_test() :
+    schedule.every(10).seconds.do(Trader.refresh)
+    schedule.every(20).seconds.do(job)
+    for item in DO_LIST:
+        code=item[0]
+        amount=item[1]
+        full=item[2]
+        Trader.buy(code,amount)
+        Trader.sale(code,amount)
     
+
 
 def log(message):
     print(str(datetime.now().time())+"---"+message)
-def self_test():
-    log("start_test")
-   
-    Trader.refresh()
-    Trader.buy("515880","100")
-    sleep(5)
-    Trader.refresh()
-    sleep(5)
-    Trader.sale("515880","100")
-    log("end_test")
+
 
 
 if __name__ == '__main__':
+    log("start___the___process")
+ 
     #添加定时刷新业务
-    minRange=[':59',':14',':29',':44']
+    minRange=[':04',':09',':14',':19',':24',':29',':34',':39',':44',':49',":54",':59']
     for min in minRange:
-         schedule.every().hour.at(min).do(Trader.refresh1)
+         schedule.every().hour.at(min).do(Trader.refresh)
+    
+    #self_test()
+
     #添加定时交易业务
     schedule.every().day.at("09:44:40").do(job)
     schedule.every().day.at("09:59:40").do(job)
@@ -217,10 +212,9 @@ if __name__ == '__main__':
     schedule.every().day.at("14:44:40").do(job)
     schedule.every().day.at("14:56:40").do(job)
 
-    log("start_the_process")
-    #Trader.refresh()
-    #Trader.refresh()
-    self_test()
+    log("start___the___process")
+    log("DO_LIST----")
+    print(DO_LIST)
     while True :
         schedule.run_pending()
         
